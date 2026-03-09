@@ -3,13 +3,22 @@ export const createUser = async ({ name, email, hashedPassword }) => {
   const query = `
     INSERT INTO users (name, email, password, created_at)
     VALUES ($1, $2, $3, NOW())
-    RETURNING id, name, email, created_at`;
+    RETURNING id, name, email, role, created_at`;
   const { rows } = await pool.query(query, [name, email, hashedPassword]);
   return rows[0];
 };
 
+export const createSeller = async ({ name, email, hashedPassword, role }) => {
+  const query = `
+  INSERT INTO users (name, email, password, role, created_at)
+  VALUES ($1, $2, $3, $4, now())
+  RETURNING id, name, email,role, created_at`;
+  const { rows } = await pool.query(query, [name, email, hashedPassword, role]);
+  return rows[0];
+};
+
 export const findUserByEmail = async (email) => {
-  const query = `SELECT id, name, email, password, created_at FROM users WHERE email = $1`;
+  const query = `SELECT id, name, email, password, role, created_at FROM users WHERE email = $1`;
   const { rows } = await pool.query(query, [email]);
   return rows[0];
 };

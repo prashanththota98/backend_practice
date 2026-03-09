@@ -21,8 +21,17 @@ const startServer = async () => {
 
 startServer();
 
-process.on("SIGINT", async () => {
+// process.on("SIGINT", async () => {
+//   console.log("Shutting down server...");
+//   await pool.end();
+//   process.exit(0);
+// });
+
+const shutdown = async () => {
   console.log("Shutting down server...");
   await pool.end();
   process.exit(0);
-});
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
