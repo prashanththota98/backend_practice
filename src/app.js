@@ -1,9 +1,11 @@
 import express from "express";
 import userRoutes from "./routes/user.js";
 import productRoutes from "./routes/products.js";
+import refreshRoutes from "./routes/refresh.js";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -12,6 +14,7 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
@@ -19,6 +22,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/refresh", refreshRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({

@@ -5,6 +5,7 @@ import {
 } from "../services/user.service.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { saveRefreshToken } from "../services/refresh.service.js";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -71,7 +72,7 @@ export const registerSeller = async (req, res, next) => {
       hashedPassword,
       role: "seller",
     });
-    res.status(201).json({ message: "User created", data: user });
+    res.status(201).json({ message: "Seller created", data: user });
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({ message: "Email already exists" });
@@ -110,10 +111,31 @@ export const loginUser = async (req, res, next) => {
       },
     );
 
+    const refreshToken = jwt.sign(
+      { sub: user.id, role: user.role },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await saveRefreshToken(refreshToken, user.id, expiresAt);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       message: "Login successful",
       token,
-      data: { id: user.id, name: user.name, email: user.email },
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     next(error);

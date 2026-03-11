@@ -1,6 +1,7 @@
 import {
   createProduct,
   deleteProductById,
+  getAllProducts,
   getProductById,
   updateProductById,
 } from "../services/product.service.js";
@@ -23,6 +24,21 @@ export const addNewProduct = async (req, res, next) => {
         success: false,
         message: "Name and price are required",
       });
+    }
+
+    if (isNaN(price) || Number(price) <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Price must be a positive number" });
+    }
+
+    if (
+      stock_quantity &&
+      (!Number.isInteger(stock_quantity) || stock_quantity < 0)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Stock must be a non-negative integer" });
     }
 
     const newProduct = await createProduct({
@@ -66,7 +82,7 @@ export const deleteProduct = async (req, res, next) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    if (product.user_id !== req.user.id) {
+    if (product.user_id !== Number(req.user.id)) {
       return res
         .status(403)
         .json({ message: "Forbidden: You do not own this product" });
@@ -93,15 +109,62 @@ export const updateProduct = async (req, res, next) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (product.user_id !== req.user.id) {
+    if (product.user_id !== Number(req.user.id)) {
       return res
         .status(403)
         .json({ message: "Forbidden: You do not own this product" });
     }
 
-    const updatedProduct = await updateProductById(productId, updatedData);
+    const allowedFields = [
+      "name",
+      "description",
+      "category",
+      "price",
+      "image_url",
+      "stock_quantity",
+      "features",
+    ];
+
+    const sanitizedData = {};
+    for (let key in updatedData) {
+      if (allowedFields.includes(key)) sanitizedData[key] = updatedData[key];
+    }
+    if (sanitizedData.price !== undefined) {
+      if (isNaN(sanitizedData.price) || Number(sanitizedData.price) <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Price must be a positive number" });
+      }
+    }
+
+    if (sanitizedData.stock_quantity !== undefined) {
+      if (
+        !Number.isInteger(sanitizedData.stock_quantity) ||
+        sanitizedData.stock_quantity < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Stock must be a non-negative integer",
+        });
+      }
+    }
+    delete sanitizedData.user_id;
+
+    const updatedProduct = await updateProductById(productId, sanitizedData);
     res.status(200).json({ success: true, data: updatedProduct });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const allProducts = async (req, res, next) => {
+  try {
+    const products = await getAllProducts();
+    if (!products.length) {
+      return res.status(404).json({ message: "No Products Found" });
+    }
+    return res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    next(error);
   }
 };

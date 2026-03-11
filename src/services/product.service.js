@@ -52,9 +52,15 @@ export const updateProductById = async (id, updatedData) => {
     index++;
   }
   const query = `
-  UPDATE products SET ${fields.join(", ")} WHERE id = $${index}`;
+  UPDATE products SET ${fields.join(", ")} WHERE id = $${index} RETURNING *`;
   values.push(id);
 
   const { rows } = await pool.query(query, values);
   return rows[0];
+};
+
+export const getAllProducts = async () => {
+  const query = `SELECT * FROM products`;
+  const { rows } = await pool.query(query);
+  return rows;
 };
