@@ -2,6 +2,8 @@ import {
   createUser,
   createSeller,
   findUserByEmail,
+  findUserById,
+  updateUserDetails,
 } from "../services/user.service.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -84,6 +86,7 @@ export const registerSeller = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password);
     if (!email || !password) {
       return res
         .status(400)
@@ -137,6 +140,58 @@ export const loginUser = async (req, res, next) => {
         role: user.role,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getprofile = async (req, res, next) => {
+  try {
+    console.log("Token payload:", req.user); // should be { sub: 14, role: "seller" }
+    const userId = req.user.id;
+    const profileDetails = await findUserById(userId);
+    console.log("Profile fetched:", profileDetails);
+    return res.status(200).json({ message: true, data: profileDetails });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const editProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, oldPassword, newPassword } = req.body;
+    const updatedFields = {};
+    if (name) updatedFields.name = name;
+    if (email) {
+      const existingUser = await findUserByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(409).json({ message: "Email already in use" });
+      }
+      updatedFields.email = email;
+    }
+    if (newPassword) {
+      if (!oldPassword) {
+        return res
+          .status(400)
+          .json({ message: "Old password is required to change password" });
+      }
+      const user = await findUserById(userId);
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Old password is incorrect" });
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      updatedFields.password = hashedPassword;
+    }
+    if (Object.keys(updatedFields).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    const updatedUser = await updateUserDetails(userId, updatedFields);
+    res
+      .status(200)
+      .json({ message: "Profile updated successfully", data: updatedUser });
   } catch (error) {
     next(error);
   }

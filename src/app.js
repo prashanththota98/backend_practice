@@ -2,6 +2,8 @@ import express from "express";
 import userRoutes from "./routes/user.js";
 import productRoutes from "./routes/products.js";
 import refreshRoutes from "./routes/refresh.js";
+import addressRoutes from "./routes/address.js";
+import cartRoutes from "./routes/cart.js";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
@@ -10,7 +12,12 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5174",
+    credentials: true,
+  }),
+);
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,6 +30,8 @@ app.get("/health", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/refresh", refreshRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({
@@ -32,8 +41,8 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    message: "Internal Server Error",
+  res.status(400).json({
+    message: err.message || "Internal Server Error",
   });
 });
 

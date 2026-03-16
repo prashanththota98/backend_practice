@@ -33,9 +33,23 @@ The system allows users to register, authenticate using JWT, and manage products
 - features
 - user_id as foreign key from user table id
 
+### Addresses Table
+
+- id (PK)
+- user_id (FK → users.id)
+- street
+- city
+- state
+- postal_code
+- country
+- address_type (home, work, etc.)
+- created_at
+- updated_at
+
 #### API Endpoints
 
-- Register: api/users/register
-- Seller Registration: api/users/seller/register
-- Login: api/users/login
-- Products: api/Products
+- Register: POST - api/users/register
+- Seller Registration: POST - api/users/seller/register
+- Login: POST - api/users/login
+- Products: GET/POST api/Products to fetch and Add products PATCH/DELETE - api/Products/id to delete and update
+- Profile: api/users/me

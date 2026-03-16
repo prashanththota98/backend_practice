@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import {
   deleteRefreshToken,
   findRefreshToken,
@@ -11,6 +12,7 @@ export const refreshAccessToken = async (req, res, next) => {
       return res.status(401).json({ message: "No refresh token provided" });
     }
     const storedToken = await findRefreshToken(refreshToken);
+    console.log("Stored Token:", storedToken);
     if (!storedToken) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
@@ -21,8 +23,15 @@ export const refreshAccessToken = async (req, res, next) => {
     let payload;
     try {
       payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      console.log("Decoded payload:", payload);
     } catch (err) {
-      await deleteRefreshToken(refreshToken);
+      console.log("JWT ERROR:", err.message);
+      if (
+        err.name === "TokenExpiredError" ||
+        err.name === "JsonWebTokenError"
+      ) {
+        await deleteRefreshToken(refreshToken);
+      }
       return res.status(403).json({ message: "Invalid refresh token" });
     }
     const user = await findUserById(payload.sub);
