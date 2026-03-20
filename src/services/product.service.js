@@ -28,13 +28,13 @@ export const createProduct = async (productdata) => {
 };
 
 export const getProductById = async (id) => {
-  const query = `SELECT * FROM products WHERE id = $1`;
+  const query = `SELECT * FROM products WHERE id = $1 AND is_active = true`;
   const { rows } = await pool.query(query, [id]);
   return rows[0];
 };
 
 export const deleteProductById = async (id) => {
-  const query = `DELETE FROM products where id = $1 RETURNING *`;
+  const query = `UPDATE products SET is_active = false WHERE id = $1 RETURNING *`;
   const { rows } = await pool.query(query, [id]);
   return rows[0];
 };
@@ -60,7 +60,7 @@ export const updateProductById = async (id, updatedData) => {
 };
 
 export const getAllProducts = async () => {
-  const query = `SELECT * FROM products`;
+  const query = `SELECT * FROM products WHERE is_active = true`;
   const { rows } = await pool.query(query);
   return rows;
 };

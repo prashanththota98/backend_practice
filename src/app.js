@@ -4,6 +4,7 @@ import productRoutes from "./routes/products.js";
 import refreshRoutes from "./routes/refresh.js";
 import addressRoutes from "./routes/address.js";
 import cartRoutes from "./routes/cart.js";
+import orderRoutes from "./routes/order.js";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
@@ -32,6 +33,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/refresh", refreshRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({
@@ -41,7 +43,7 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(400).json({
+  res.status(err.status || 500).json({
     message: err.message || "Internal Server Error",
   });
 });

@@ -4,7 +4,7 @@ export const errorHandling = (err, req, res, next) => {
 
   console.error(err.stack);
 
-  if (err.message.includes === "Insufficient stock") {
+  if (err.message === "Insufficient stock") {
     return res.status(400).json({ message: err.message });
   }
 
